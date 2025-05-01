@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YojanaSetu - SchemeAI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    #chatbot {
+      background-image: url('https://media.istockphoto.com/id/1509014062/photo/chatbot-are-assistant-conversation.jpg?s=2048x2048&w=is&k=20&c=dAodIp_Zld6sNiyg68uq8rd6YJ7RCDk3R9uYNGf9T9g=');
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 20px;
+      position: relative;
+    }
+
+    #chatbot::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      filter: blur(8px);
+      z-index: -1;
+    }
+
+    .chatbot-container {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 25px 20px;
+      width: 100%;
+      max-width: 700px;
+      height: 80vh;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .chatbot-heading {
+      text-align: center;
+    }
+
+    .chatbot-heading h2 {
+      background: linear-gradient(to right, #a5b0d6, #082d85);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      display: inline-block;
+      font-size: 1.6rem;
+    }
+
+    #chatbox {
+      flex: 1;
+      overflow-y: auto;
+      background: #f1f8e9;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      margin: 15px 0;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 10px 14px;
+      margin: 5px 0;
+      border-radius: 12px;
+      font-size: 1rem;
+    }
+
+    .bot {
+      background: #e0f2f1;
+      align-self: flex-start;
+      border-top-left-radius: 0;
+    }
+
+    .user {
+      background: #d2f8d2;
+      align-self: flex-end;
+      border-top-right-radius: 0;
+      text-align: right;
+    }
+
+    #inputArea {
+      display: flex;
+    }
+
+    #userInput {
+      flex: 1;
+      border-radius: 10px 0 0 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    button.btn-primary {
+      border-radius: 0 10px 10px 0;
+      background-color: #00044d;
+      border: none;
+      padding: 10px 20px;
+    }
+
+    button.btn-primary:hover {
+      background-color: #221b5e;
+    }
+
+    small {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <section id="chatbot">
+    <div class="chatbot-container">
+      <div class="chatbot-heading">
+        <h2>🎯 YojanaSetu - Eligibility Checker</h2>
+        <p class="text-muted">Let’s check which Indian government schemes you’re eligible for!</p>
+      </div>
+      <div id="chatbox">
+        <div class="message bot">👋 Hi! Let's find some personalized schemes for you.</div>
+        <div class="message bot">🔢 What is your age?</div>
+      </div>
+      <div id="inputArea" class="input-group">
+        <input type="text" id="userInput" class="form-control" placeholder="Type your answer..." />
+        <button onclick="sendMessage()" class="btn btn-primary">Send</button>
+      </div>
+      <small>AI-powered by ChatGPT API</small>
+    </div>
+  </section>
+  <script>
+    let step = 1;
+    let userData = {};
+    let selectedScheme = "";
+    
+    function appendMessage(content, sender) {
+      const div = document.createElement("div");
+      div.className = `message ${sender}`;
+      div.innerText = content;
+      document.getElementById("chatbox").appendChild(div);
+      document.getElementById("chatbox").scrollTop = document.getElementById("chatbox").scrollHeight;
+    }
+    
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const text = input.value.trim();
+      if (!text) return;
+    
+      appendMessage(text, "user");
+      input.value = "";
+    
+      if (step === 1) {
+        const age = parseInt(text);
+        if (isNaN(age) || age < 1 || age > 120) {
+          appendMessage("⚠️ Please enter a valid age.", "bot");
+          return;
+        }
+        userData.age = age;
+        appendMessage("💼 What is your occupation (student, farmer, job seeker, employed)?", "bot");
+        step++;
+      } else if (step === 2) {
+        userData.occupation = text;
+        appendMessage("💰 What is your annual income (in ₹)?", "bot");
+        step++;
+      } else if (step === 3) {
+        const income = parseInt(text.replace(/\D/g, ""));
+        if (isNaN(income)) {
+          appendMessage("⚠️ Please enter a valid numeric income.", "bot");
+          return;
+        }
+        userData.income = income;
+        appendMessage("🧑‍🎓 Which category do you belong to (SC, ST, OBC, EWS, General)?", "bot");
+        step++;
+      } else if (step === 4) {
+        userData.category = text;
+        appendMessage("🔍 Recommending schemes for you...⏳", "bot");
+    
+        const res = await fetch("/chatgpt-scheme-recommender", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...userData, stage: "initial" })
+        });
+    
+        const data = await res.json();
+        if (data.schemes) {
+          appendMessage("✅ Here are some schemes you may be eligible for:\n" + data.schemes, "bot");
+          appendMessage("🧠 Type the scheme name you want more details about.", "bot");
+          step++;
+        } else {
+          appendMessage("❌ No schemes found or error occurred.", "bot");
+        }
+      } else if (step === 5) {
+        selectedScheme = text;
+        appendMessage("📋 Fetching detailed information for: " + selectedScheme, "bot");
+    
+        const res = await fetch("/chatgpt-scheme-recommender", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...userData,
+            stage: "followup",
+            selected_scheme: selectedScheme
+          })
+        });
+    
+        const data = await res.json();
+        if (data.schemes) {
+          appendMessage(data.schemes, "bot");
+        } else {
+          appendMessage("❌ Unable to fetch detailed info.", "bot");
+        }
+        step++; // conversation ends or can continue asking
+      }
+    }
+    </script>
+    

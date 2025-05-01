@@ -1,0 +1,26 @@
+<label for="schemeSelect">Choose a Scheme:</label>
+<select id="schemeSelect" onchange="generatePrompt()" class="form-select">
+  <option value="">--Select--</option>
+  <option value="PM-KISAN">PM-KISAN</option>
+  <option value="Startup India">Startup India</option>
+  <option value="National Scholarship">National Scholarship</option>
+</select>
+
+<div id="promptOutput" style="margin-top: 20px; background-color:#f5f5f5; padding:10px; border-radius: 8px;"></div>
+<script>
+    function generatePrompt() {
+      const scheme = document.getElementById('schemeSelect').value;
+      const output = document.getElementById('promptOutput');
+    
+      if (!scheme) {
+        output.innerHTML = "";
+        return;
+      }
+    
+      const prompt = `🎥 Create a 1-minute explainer video about the "${scheme}" scheme. 
+    Include eligibility criteria, benefits, required documents, and application steps. 
+    Language: Hindi. Style: clear, visual, and friendly.`;
+    
+      output.innerText = prompt;
+    }
+    </script>
